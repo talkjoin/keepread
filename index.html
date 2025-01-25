@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Learning Translator</title>
+    <style>
+        body {
+            font-family: 'Helvetica', sans-serif;
+            background: #f4f4f4;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #444;
+        }
+
+        input, select, button {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        input {
+            width: 55%;
+        }
+
+        select {
+            width: 20%;
+            margin-left: 10px;
+        }
+
+        button {
+            background: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #output {
+            margin-top: 20px;
+            text-align: left;
+            padding: 20px;
+            border-top: 1px solid #ddd;
+			margin: 20px auto;
+			white-space: pre-line;
+        }
+
+        .original {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .translated {
+            font-style: italic;
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            input, select, button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            select {
+                margin-left: 0;
+            }
+
+            button {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Learn a Language Sentence by Sentence</h1>
+        <input type="text" id="urlInput" placeholder="Enter URL (e.g., https://example.com)">
+        
+        <select id="languageSelect">
+            <option value="en">English</option>
+            <option value="zh-CN">Simplified Chinese</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="ja">Japanese</option>
+            <option value="ko">Korean</option>
+        </select>
+
+        <button onclick="translatePage()">Translate</button>
+
+        <div id="output">Enter a URL and select a language to start translation. (tips: work best with news articles)</div>
+    </div>
+
+    <script>
+        async function translatePage() {
+            const url = document.getElementById('urlInput').value.trim();
+            const targetLang = document.getElementById('languageSelect').value;
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = '<p style="text-align:center;">Fetching content...</p>';
+
+            if (!url) {
+                alert('Please enter a valid URL');
+                return;
+            }
+
+            try {
+                // Fetch webpage content using a CORS proxy
+                const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data.contents, 'text/html');
+
+                // Get all paragraph elements
+                const paragraphs = doc.querySelectorAll('p');
+                
+                if (paragraphs.length === 0) {
+                    outputDiv.innerHTML = '<p style="color:red;">No paragraphs found to translate.</p>';
+                    return;
+                }
+
+                outputDiv.innerHTML = '<p style="text-align:center;">Translating content, can take up to 10 seconds...</p>';
+                let translatedContent = '';
+
+                for (const p of paragraphs) {
+                    const sentences = p.innerText.split(/(?<=[.!?])\s+/); // Split text into sentences
+                    for (const sentence of sentences) {
+                        const trimmedSentence = sentence.trim();
+                        if (trimmedSentence) {
+                            const translated = await translateText(trimmedSentence, targetLang);
+                            translatedContent += `
+                                <p>
+                                    <span class="original">${trimmedSentence}</span><br>
+                                    <span class="translated">${translated}</span>
+                                </p>`;
+                        }
+                    }
+                }
+
+                outputDiv.innerHTML = translatedContent;
+            } catch (error) {
+                console.error('Error fetching or translating:', error);
+                outputDiv.innerHTML = '<p style="color:red;">Error processing the webpage. Please try again.</p>';
+            }
+        }
+
+        async function translateText(text, targetLang) {
+            const apiKey = 'AIzaSyC0ia2EhNjjDsqZ9pk3LDkr1peYY72byV8';  // Replace with your Google Translate API key
+            const url = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    q: text,
+                    target: targetLang
+                }),
+            });
+
+            const result = await response.json();
+            return result.data.translations[0].translatedText;
+        }
+    </script>
+</body>
+</html>
