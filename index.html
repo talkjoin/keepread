@@ -118,7 +118,7 @@
             const url = document.getElementById('urlInput').value.trim();
             const targetLang = document.getElementById('languageSelect').value;
             const outputDiv = document.getElementById('output');
-            outputDiv.innerHTML = '<p style="text-align:center;">Fetching content...</p>';
+            outputDiv.innerHTML = '<p style="text-align:center;">Get ready for yoru content, will take up to 10 seconds...</p>';
 
             if (!url) {
                 alert('Please enter a valid URL');
@@ -140,7 +140,7 @@
                     return;
                 }
 
-                outputDiv.innerHTML = '<p style="text-align:center;">Translating content, can take up to 10 seconds...</p>';
+                outputDiv.innerHTML = '<p style="text-align:center;">Hang in there, almost there...</p>';
                 let translatedContent = '';
 
                 for (const p of paragraphs) {
